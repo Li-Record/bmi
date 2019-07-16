@@ -1,6 +1,7 @@
 window.addEventListener('load', function(e) {
 
-    var bmiBtn = document.getElementById('bmiBtn');
+    //var bmiBtn = document.getElementById('bmiBtn');
+    var bmiBtn = document.querySelector('.bmiBtn_wrap');
     var hData = document.getElementById('height');
     var wData = document.getElementById('weight');
     var bmiData = JSON.parse(localStorage.getItem('bmi')) || [];
@@ -15,11 +16,11 @@ window.addEventListener('load', function(e) {
             return;
         } else {
             for (var i = 0; i < bmiData.length; i++) {
-                str += '<li class="' + bmiData[i].class + '" data-num="'+i+'"><h4>' + bmiData[i].status + '</h4><div class="listInf"><h5>BMI</h5><p>' + bmiData[i].value + '</p></div><div class="listInf"><h5>weight</h5><p>' + bmiData[i].weight + '</p></div><div class="listInf"><h5>height</h5><p>' + bmiData[i].height + '</p></div><p class="time">' + bmiData[i].date + '</p><a href="#">刪除</a><div class="clear"></div></li>'
+                str += '<li class="' + bmiData[i].class + '" data-num="' + i + '"><h4>' + bmiData[i].status + '</h4><div class="listInf"><h5>BMI</h5><p>' + bmiData[i].value + '</p></div><div class="listInf"><h5>weight</h5><p>' + bmiData[i].weight + '</p></div><div class="listInf"><h5>height</h5><p>' + bmiData[i].height + '</p></div><p class="time">' + bmiData[i].date + '</p><a href="#">刪除</a><div class="clear"></div></li>'
             }
         }
 
-        content.innerHTML = '<h3>BMI 紀錄</h3><ul>' + str + '</ul><div class="clear" />';
+        content.innerHTML = '<h3>BMI 紀錄</h3><ul>' + str + '</ul><a href="#" class="removeAll">清除全部</a><div class="clear" />';
     }
     // 初始化 先更新一次頁面
     updateData();
@@ -68,7 +69,10 @@ window.addEventListener('load', function(e) {
     // 取得輸入資料並放入 localstorage
     function getInput(e) {
         var r = /^[0-9]*[1-9][0-9]*$/;
-        if (!r.test(hData.value) || !r.test(wData.value)) {
+        e.preventDefault();
+        if (e.target.nodeName !== 'A') {
+            return;
+        } else if (!r.test(hData.value) || !r.test(wData.value)) {
             alert('請輸入數字');
             return;
         } else if (hData.value.length > 3 || wData.value.length > 3) {
@@ -77,6 +81,13 @@ window.addEventListener('load', function(e) {
         } else {
             bmiData.push(bmiCount(hData.value, wData.value));
             localStorage.setItem('bmi', JSON.stringify(bmiData));
+            // 執行一個匿名函數修改按鈕
+            (function() {
+                var bmi = bmiCount(hData.value, wData.value);
+                var str = '';
+                str += '<div class="bmiBtn ' + bmi.class + 'Btn"><span class="bmiValue">' + bmi.value + '<br><em>BMI</em></span><span class="bmiResult">' + bmi.status + '</span><a href="#" class="loopIcon" id="bmiBtn"></a></div>';
+                bmiBtn.innerHTML = str;
+            })();
             updateData();
         }
     }
@@ -84,13 +95,23 @@ window.addEventListener('load', function(e) {
     bmiBtn.addEventListener('click', getInput, false);
 
     // 刪除 localstorage 該筆資料後更新頁面;
-    function removeData(e){
-        if( e.target.nodeName !== 'A'){return}
+    function removeData(e) {
         e.preventDefault();
-        var num = e.target.parentNode.dataset.num;
-        bmiData.splice(num, 1);
-        localStorage.setItem('bmi', JSON.stringify(bmiData));
-        updateData();
+        if (e.target.nodeName !== 'A') {
+            return;
+        } else if (e.target.className == 'removeAll') {
+            var len = bmiData.length;
+            bmiData.splice(0, len);
+            localStorage.setItem('bmi', JSON.stringify(bmiData));
+            updateData();
+            return;
+        } else {
+            var num = e.target.parentNode.dataset.num;
+            bmiData.splice(num, 1);
+            localStorage.setItem('bmi', JSON.stringify(bmiData));
+            updateData();
+        }
+
     }
 
     content.addEventListener('click', removeData, false);
